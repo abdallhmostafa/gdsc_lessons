@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main(List<String> args) {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
-
+    Future<void> prepareForScreenshot() async {
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: [],
+    );
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+  }
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
