@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Flutter Layouts Masterclass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* 1. CUSTOM COLOR PALETTE */
+        :root {
+            --sky-blue-light: #8ecae6;
+            --blue-green: #219ebc;
+            --deep-space-blue: #023047;
+            --amber-flame: #ffb703;
+            --princeton-orange: #fb8500;
+            --flutter-blue: #042B59;
+            --flutter-light: #42A5F5;
+
+            /* Dark Theme Mapping */
+            --bg-main: #011824;
+            --bg-slide: var(--deep-space-blue);
+            --bg-code: #012233;
+            --border-color: var(--blue-green);
+            --text-main: var(--sky-blue-light);
+            --text-heading: #ffffff;
+            --text-muted: #6e9eb5;
+            --accent: var(--amber-flame);
+            --accent-dark: var(--princeton-orange);
+            --bg-tile: #023a57;
+            --th-bg: #012233;
+
+            --success: #10B981;
+            --error: #ef233c;
+        }
+
+        [data-theme="light"] {
+            /* Light Theme Mapping */
+            --bg-main: #f0f8fb;
+            --bg-slide: #ffffff;
+            --bg-code: #f1f7f9;
+            --border-color: var(--sky-blue-light);
+            --text-main: var(--deep-space-blue);
+            --text-heading: var(--deep-space-blue);
+            --text-muted: var(--blue-green);
+            --accent: var(--princeton-orange);
+            --accent-dark: var(--amber-flame);
+            --bg-tile: #e1f2fa;
+            --th-bg: var(--sky-blue-light);
+        }
+
+        /* 2. BASE STYLES & TRANSLATION LOGIC */
+        * {
+            box-sizing: border-box;
+        }
+
+        p {
+            margin: 0;
+            margin-bottom: 15px;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: grid;
+            place-items: center;
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow: hidden;
+        }
+
+        .ar {
+            display: none;
+        }
+
+        .en {
+            display: inline;
+        }
+
+        div.en,
+        p.en,
+        h1.en,
+        h2.en,
+        h3.en,
+        li.en,
+        td.en,
+        th.en {
+            display: block;
+        }
+
+        body[lang="ar"] {
+            direction: rtl;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body[lang="ar"] .en {
+            display: none !important;
+        }
+
+        body[lang="ar"] .ar {
+            display: inline;
+        }
+
+        body[lang="ar"] div.ar,
+        body[lang="ar"] p.ar,
+        body[lang="ar"] h1.ar,
+        body[lang="ar"] h2.ar,
+        body[lang="ar"] h3.ar,
+        body[lang="ar"] li.ar,
+        body[lang="ar"] td.ar,
+        body[lang="ar"] th.ar {
+            display: block;
+        }
+
+        body[lang="ar"] .code-block,
+        body[lang="ar"] .contact-info,
+        body[lang="ar"] .slide-number,
+        body[lang="ar"] .sim-code-panel,
+        body[lang="ar"] .ltr-force {
+            direction: ltr;
+            text-align: left;
+        }
+
+        /* 3. SLIDE CONTAINER */
+        #presentation {
+            position: relative;
+            width: 1280px;
+            height: 720px;
+            perspective: 1000px;
+        }
+
+        .slide-container {
+            align-items: flex-start;
+            background-color: var(--bg-slide);
+            border-radius: 20px;
+            border: 2px solid rgba(142, 202, 230, 0.2);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            display: none;
+            flex-direction: column;
+            gap: 30px;
+            height: 100%;
+            justify-content: center;
+            overflow: hidden;
+            padding: 50px 70px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+
+        .slide-container.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            z-index: 10;
+        }
+
+        .progress-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--flutter-light), var(--blue-green));
+            transition: width 0.4s ease;
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            color: var(--text-muted);
+            font-size: 16px;
+            font-weight: bold;
+            font-family: 'Fira Code', monospace;
+        }
+
+        body[lang="ar"] .slide-number {
+            right: auto;
+            left: 30px;
+        }
+
+        /* 4. TYPOGRAPHY */
+        h1,
+        h2,
+        h3,
+        h4 {
+            color: var(--text-heading);
+            font-weight: 800;
+            margin: 0;
+        }
+
+        h1 span,
+        h2 span,
+        h3 span {
+            color: var(--accent);
+        }
+
+        h1 {
+            font-size: 68px;
+            line-height: 1.1;
+            letter-spacing: -1px;
+        }
+
+        .slide-title {
+            font-size: 40px;
+            line-height: 1.2;
+            margin-bottom: 10px;
+            width: 100%;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        body[lang="ar"] .slide-title {
+            text-align: right;
+        }
+
+        h3 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        li {
+            font-size: 20px;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        p {
+            font-size: 20px;
+            line-height: 1.6;
+        }
+
+        .subtitle {
+            font-size: 24px;
+            font-weight: 500;
+            margin-top: 20px;
+            color: var(--sky-blue-light);
+        }
+
+        [data-theme="light"] .subtitle {
+            color: var(--blue-green);
+        }
+
+        .agenda-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .agenda-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--bg-tile);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            font-size: 20px;
+            font-weight: 700;
+            transition: transform 0.2s;
+        }
+
+        .agenda-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--flutter-light);
+        }
+
+        .agenda-num {
+            background: var(--flutter-light);
+            color: #fff;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        /* 5. CODE BLOCKS */
+        .code-block {
+            background-color: var(--bg-code);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            font-family: 'Fira Code', monospace;
+            font-size: 17px;
+            color: #E2E8F0;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.2);
+            line-height: 1.5;
+        }
+
+        [data-theme="light"] .code-block {
+            color: var(--deep-space-blue);
+        }
+
+        .code-actions {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+            z-index: 5;
+        }
+
+        .action-btn {
+            background: rgba(142, 202, 230, 0.1);
+            border: 1px solid var(--blue-green);
+            color: var(--sky-blue-light);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        [data-theme="light"] .action-btn {
+            color: var(--blue-green);
+            border-color: var(--blue-green);
+        }
+
+        .action-btn:hover {
+            background: var(--accent);
+            color: var(--deep-space-blue);
+            border-color: var(--accent);
+        }
+
+        .ai-explanation {
+            background: rgba(33, 158, 188, 0.1);
+            border: 2px solid var(--blue-green);
+            border-top: none;
+            padding: 20px;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            font-size: 16px;
+            color: var(--text-heading);
+            margin-top: -15px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.6;
+        }
+
+        .ai-explanation.active {
+            display: block;
+            animation: fadeInDown 0.3s ease-out;
+        }
+
+        .ai-explanation strong {
+            color: var(--accent);
+        }
+
+        body[lang="ar"] .ai-explanation {
+            text-align: right;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Flutter Specific Syntax Highlighting */
+        .kw {
+            color: #ff8fab;
+            font-weight: 600;
+        }
+
+        /* Keywords: const, final, return */
+        .ty {
+            color: #48cae4;
+            font-weight: 600;
+        }
+
+        /* Types/Widgets: Container, Text, Row */
+        .fn {
+            color: #ffd166;
+        }
+
+        /* Properties/Functions: child, children, mainAxisAlignment */
+        .st {
+            color: #06d6a0;
+        }
+
+        /* Strings */
+        .nm {
+            color: #f77f00;
+        }
+
+        /* Numbers */
+        .cm {
+            color: #6e9eb5;
+            font-style: italic;
+        }
+
+        /* Comments */
+        .enm {
+            color: #c8b6ff;
+        }
+
+        /* Enums: Colors.red, MainAxisAlignment.center */
+
+        [data-theme="light"] .kw {
+            color: #d90429;
+        }
+
+        [data-theme="light"] .ty {
+            color: #023e8a;
+        }
+
+        [data-theme="light"] .fn {
+            color: #f77f00;
+        }
+
+        [data-theme="light"] .st {
+            color: #2a9d8f;
+        }
+
+        [data-theme="light"] .nm {
+            color: #d62828;
+        }
+
+        [data-theme="light"] .cm {
+            color: #8ecae6;
+        }
+
+        [data-theme="light"] .enm {
+            color: #6a4c93;
+        }
+
+        /* 6. LAYOUTS */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        .title-layout,
+        .section-title-layout {
+            text-align: center;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .section-title-layout h2 {
+            font-size: 64px;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title-layout p {
+            font-size: 26px;
+            margin: 0 auto;
+            max-width: 800px;
+            color: var(--sky-blue-light);
+        }
+
+        [data-theme="light"] .section-title-layout p {
+            color: var(--blue-green);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+        }
+
+        .two-column.tiled {
+            align-items: stretch;
+        }
+
+        .two-column.tiled>div {
+            background-color: var(--bg-tile);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Concept Block Styling */
+        .concept-block h3 {
+            margin-top: 0;
+            color: var(--flutter-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .concept-block p strong {
+            color: var(--sky-blue-light);
+        }
+
+        [data-theme="light"] .concept-block p strong {
+            color: var(--blue-green);
+        }
+
+        /* Interactive Blocks & Buttons */
+        .sim-btn {
+            background: var(--flutter-light);
+            color: #ffffff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Inter', 'Cairo', sans-serif;
+            box-shadow: 0 4px 10px rgba(66, 165, 245, 0.4);
+        }
+
+        .sim-btn:hover {
+            transform: translateY(-3px);
+            background: #1E88E5;
+            box-shadow: 0 6px 15px rgba(30, 136, 229, 0.5);
+        }
+
+        .bug-opt {
+            background: var(--bg-code);
+            border: 2px solid var(--border-color);
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .bug-opt:hover {
+            border-color: var(--flutter-light);
+            background: rgba(66, 165, 245, 0.1);
+        }
+
+        .bug-opt.wrong {
+            background: rgba(239, 35, 60, 0.1);
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .bug-opt.correct {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .sim-result {
+            font-size: 18px;
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .sim-result.show {
+            opacity: 1;
+        }
+
+        .sim-error {
+            background: rgba(239, 35, 60, 0.1);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .sim-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .lab-solution {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .lab-solution.show {
+            display: block;
+            animation: fadeInDown 0.3s;
+        }
+
+        /* 7. ENHANCED QUIZ ENGINE */
+        .quiz-engine {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: var(--flutter-light);
+            font-weight: 700;
+        }
+
+        .quiz-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--bg-code);
+            border-radius: 5px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .quiz-progress-fill {
+            height: 100%;
+            background: var(--flutter-light);
+            width: 0%;
+            transition: 0.4s;
+        }
+
+        .quiz-question-container {
+            background: var(--bg-tile);
+            border: 2px solid var(--blue-green);
+            border-radius: 16px;
+            padding: 40px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .q-text {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: var(--text-heading);
+        }
+
+        .q-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .q-opt {
+            background: var(--bg-code);
+            border: 2px solid var(--border-color);
+            color: var(--text-main);
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            font-family: 'Inter', 'Cairo', sans-serif;
+            font-weight: 600;
+        }
+
+        body[lang="ar"] .q-opt {
+            text-align: right;
+        }
+
+        .q-opt:hover {
+            border-color: var(--flutter-light);
+            transform: translateX(5px);
+            background: rgba(66, 165, 245, 0.05);
+        }
+
+        body[lang="ar"] .q-opt:hover {
+            transform: translateX(-5px);
+        }
+
+        .q-opt.selected.correct {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .q-opt.selected.wrong {
+            background: rgba(239, 35, 60, 0.1);
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .q-opt.correct-reveal {
+            border-color: var(--success);
+            border-style: dashed;
+        }
+
+        .quiz-footer {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .q-feedback {
+            font-size: 20px;
+            font-weight: bold;
+            opacity: 0;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .q-feedback.show {
+            opacity: 1;
+        }
+
+        .quiz-results {
+            text-align: center;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 8px solid var(--flutter-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--text-heading);
+            margin: 0 auto 30px auto;
+            box-shadow: 0 0 30px rgba(66, 165, 245, 0.3);
+        }
+
+        /* 8. GLOBAL UI (NAV, LANG, THEME) */
+        .controls-overlay {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            background: rgba(2, 48, 71, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: 1px solid var(--blue-green);
+            z-index: 100;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] .controls-overlay {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--sky-blue-light);
+            font-size: 26px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+        }
+
+        [data-theme="light"] .nav-btn {
+            color: var(--deep-space-blue);
+        }
+
+        .nav-btn:hover {
+            color: var(--flutter-light);
+            transform: scale(1.15);
+            background: rgba(66, 165, 245, 0.1);
+        }
+
+        body[lang="ar"] .controls-overlay {
+            flex-direction: row-reverse;
+        }
+
+        body[lang="ar"] .nav-btn i {
+            transform: scaleX(-1);
+        }
+
+        .theme-toggle,
+        .lang-toggle {
+            position: fixed;
+            top: 30px;
+            background: var(--bg-tile);
+            border: 2px solid var(--blue-green);
+            color: var(--text-main);
+            height: 50px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            font-family: 'Inter', 'Cairo', sans-serif;
+            font-weight: 700;
+        }
+
+        .theme-toggle {
+            width: 50px;
+            right: 30px;
+            border-radius: 50%;
+        }
+
+        .lang-toggle {
+            padding: 0 20px;
+            right: 90px;
+        }
+
+        .theme-toggle:hover,
+        .lang-toggle:hover {
+            color: var(--flutter-light);
+            border-color: var(--flutter-light);
+            transform: translateY(-3px);
+        }
+
+        body[lang="ar"] .theme-toggle {
+            right: auto;
+            left: 30px;
+        }
+
+        body[lang="ar"] .lang-toggle {
+            right: auto;
+            left: 90px;
+        }
+
+        .portfolio-btn {
+            background: linear-gradient(135deg, var(--flutter-light), #1E88E5);
+            color: #ffffff !important;
+            padding: 15px 35px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 22px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 25px rgba(66, 165, 245, 0.4);
+            transition: all 0.2s;
+            border: none;
+            font-family: 'Inter', 'Cairo', sans-serif;
+        }
+
+        .portfolio-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(30, 136, 229, 0.6);
+        }
+    </style>
+</head>
+
+<body data-theme="dark" lang="en">
+
+    <button class="theme-toggle" id="theme-btn" title="Toggle Light/Dark Mode"><i class="fa-solid fa-sun"></i></button>
+    <button class="lang-toggle" id="lang-btn"><i class="fa-solid fa-language" style="margin-right: 8px;"></i> <span
+            id="lang-text">عربي</span></button>
+
+    <div id="presentation">
+
+        <!-- Slide 1: Title_Slide -->
+        <div class="slide-container active" id="slide1">
+            <div class="title-layout">
+                <h1>
+                    <span class="en">Core Flutter Layouts</span>
+                    <span class="ar">أساسيات تصميم الواجهات في فلاتر</span>
+                </h1>
+                <p class="subtitle"
+                    style="font-size: 34px; font-weight: 800; color: var(--flutter-light); margin-top: 20px;">
+                    <i class="fa-brands fa-flutter" style="margin-right: 10px;"></i> Masterclass Bootcamp
+                </p>
+                <p class="subtitle" style="color: var(--sky-blue-light);">
+                    <span class="en">Container, Row, Column, Stack & Responsive UI.</span>
+                    <span class="ar">الحاويات (Container)، الصفوف، الأعمدة، والمكدسات (Stack).</span>
+                </p>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">01</div>
+        </div>
+
+        <!-- Slide 2: Instructor Profile -->
+        <div class="slide-container" id="slide2">
+            <div class="content-area">
+                <div class="two-column">
+                    <div>
+                        <h2 class="slide-title"
+                            style="color: var(--sky-blue-light); font-size: 32px; border: none; padding: 0;">
+                            <span class="en">Instructor Profile</span>
+                            <span class="ar">الملف الشخصي للمدرب</span>
+                        </h2>
+                        <h3 style="color: var(--text-heading); font-size: 58px; margin-top: 10px; margin-bottom: 20px;">
+                            <span class="en">Abdallh Mostafa</span><span class="ar">عبدالله مصطفى</span>
+                        </h3>
+                        <p style="font-size: 26px; color: var(--flutter-light); font-weight: 700; margin-bottom: 40px;">
+                            <span class="en">Mid-level Flutter Developer @ <span
+                                    style="color: var(--text-heading);">SISMATIX IT</span></span>
+                            <span class="ar">مطور فلاتر (Mid-level) @ <span style="color: var(--text-heading);">SISMATIX
+                                    IT</span></span>
+                        </p>
+                        <p style="font-size: 20px; color: var(--text-muted); margin-bottom: 30px;">
+                            <span class="en">Expert in Clean Architecture, CI/CD, and High-Performance Mobile Apps. Over
+                                2+ years of production experience.</span>
+                            <span class="ar">خبير في البنية النظيفة (Clean Architecture)، تحسين الأداء، وتطوير التطبيقات
+                                بجودة إنتاجية عالية. خبرة تزيد عن سنتين.</span>
+                        </p>
+                        <div style="margin-top: 30px;">
+                            <a href="#" class="portfolio-btn">
+                                <i class="fa-brands fa-linkedin"></i>
+                                <span class="en">Connect on LinkedIn</span><span class="ar">التواصل عبر لينكد إن</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <div
+                            style="width: 100%; height: 300px; display: flex; align-items: center; justify-content: center;">
+                            <!-- Flutter Logo SVG -->
+                            <svg viewBox="0 0 200 200" width="60%" height="60%" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M120.5 0L10.5 110L42.5 142L184.5 0H120.5Z" fill="#42A5F5" opacity="0.8" />
+                                <path d="M64 163L10.5 110L42.5 78L128.5 163H64Z" fill="#42A5F5" />
+                                <path d="M102.5 137L128.5 111L184.5 167H120.5L102.5 149Z" fill="#042B59" />
+                                <path d="M102.5 137L120.5 119L146.5 145L128.5 163L102.5 137Z" fill="#42A5F5" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">02</div>
+        </div>
+
+        <!-- Slide 3: Agenda -->
+        <div class="slide-container" id="slide3">
+            <h2 class="slide-title" style="text-align: center; border: none;">
+                <span class="en">Masterclass <span>Agenda</span></span>
+                <span class="ar">أجندة <span>الدورة الشاملة</span></span>
+            </h2>
+            <div class="content-area" style="align-items: center;">
+                <ul class="agenda-list">
+                    <li class="agenda-item">
+                        <div class="agenda-num">1</div><span class="en">The <code>Container</code> Widget</span><span
+                            class="ar">الحاوية <code>Container</code></span>
+                    </li>
+                    <li class="agenda-item">
+                        <div class="agenda-num">2</div><span class="en">Horizontal Layouts: <code>Row</code></span><span
+                            class="ar">التخطيط الأفقي: <code>Row</code></span>
+                    </li>
+                    <li class="agenda-item">
+                        <div class="agenda-num">3</div><span class="en">Vertical Layouts:
+                            <code>Column</code></span><span class="ar">التخطيط الرأسي: <code>Column</code></span>
+                    </li>
+                    <li class="agenda-item">
+                        <div class="agenda-num">4</div><span class="en">Z-Axis Overlapping:
+                            <code>Stack</code></span><span class="ar">التخطيط المتراكب: <code>Stack</code></span>
+                    </li>
+                    <li class="agenda-item">
+                        <div class="agenda-num">5</div><span class="en">4x "Spot the UI Bug" Challenges</span><span
+                            class="ar">4 تحديات "اكتشف خطأ الواجهة"</span>
+                    </li>
+                    <li class="agenda-item">
+                        <div class="agenda-num">6</div><span class="en">3x UI Building Labs</span><span class="ar">3
+                            تدريبات عملية لتصميم الواجهات</span>
+                    </li>
+                    <li class="agenda-item"
+                        style="grid-column: span 2; justify-content: center; background: rgba(66, 165, 245, 0.1); border-color: var(--flutter-light);">
+                        <div class="agenda-num" style="background: var(--amber-flame); color: #000;">7</div><span
+                            class="en">15-Question Mega Quiz</span><span class="ar">اختبار شامل (15 سؤال)</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">03</div>
+        </div>
+
+        <!-- Slide 4: Concept 1: Container -->
+        <div class="slide-container" id="slide4">
+            <h2 class="slide-title">
+                <span class="en">1. <span>The Container Widget</span></span>
+                <span class="ar">1. <span>الحاوية (Container)</span></span>
+            </h2>
+            <div class="content-area">
+                <div class="two-column">
+                    <div class="concept-block">
+                        <h3><i class="fa-solid fa-box"></i> <span class="en">What, Why, and How?</span><span
+                                class="ar">ماذا، لماذا، وكيف؟</span></h3>
+                        <p>
+                            <span class="en"><strong>What:</strong> A convenience widget that combines common painting,
+                                positioning, and sizing elements. It's like a `div` in HTML.</span>
+                            <span class="ar"><strong>ماذا:</strong> عنصر واجهة يجمع بين التلوين، التموضع، وتحديد الحجم.
+                                يشبه وسم `div` في HTML.</span>
+                        </p>
+                        <p>
+                            <span class="en"><strong>Why:</strong> Use it when you need to add padding, margins,
+                                borders, background colors, or specific dimensions to a single child widget.</span>
+                            <span class="ar"><strong>لماذا:</strong> استخدمه عندما تحتاج لإضافة هوامش (Margin/Padding)،
+                                حواف، ألوان خلفية، أو أبعاد محددة لعنصر واحد.</span>
+                        </p>
+                        <p>
+                            <span class="en"><strong>How:</strong> Wrap your widget in a <code>Container</code>. Provide
+                                <code>width</code>, <code>height</code>, <code>padding</code>, or
+                                <code>decoration</code>.</span>
+                            <span class="ar"><strong>كيف:</strong> ضع العنصر داخل <code>Container</code>. حدد العرض
+                                <code>width</code>، الطول <code>height</code>، أو الزخرفة
+                                <code>decoration</code>.</span>
+                        </p>
+                    </div>
+                    <div>
+                        <div class="code-block">
+                            <span class="ty">Container</span>(
+                            <span class="fn">width</span>: <span class="nm">200.0</span>,
+                            <span class="fn">height</span>: <span class="nm">100.0</span>,
+                            <span class="fn">padding</span>: <span class="kw">const</span> <span
+                                class="ty">EdgeInsets</span>.all(<span class="nm">16.0</span>),
+                            <span class="fn">margin</span>: <span class="kw">const</span> <span
+                                class="ty">EdgeInsets</span>.only(top: <span class="nm">10.0</span>),
+                            <span class="fn">decoration</span>: <span class="ty">BoxDecoration</span>(
+                            <span class="fn">color</span>: <span class="enm">Colors</span>.blue,
+                            <span class="fn">borderRadius</span>: <span class="ty">BorderRadius</span>.circular(<span
+                                class="nm">8.0</span>),
+                            ),
+                            <span class="fn">child</span>: <span class="ty">Text</span>(
+                            <span class="st">'Hello Flutter!'</span>,
+                            <span class="fn">style</span>: <span class="ty">TextStyle</span>(<span
+                                class="fn">color</span>: <span class="enm">Colors</span>.white),
+                            ),
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">04</div>
+        </div>
+
+        <!-- Slide 5: Concept 2: Row -->
+        <div class="slide-container" id="slide5">
+            <h2 class="slide-title">
+                <span class="en">2. <span>Row (Horizontal Layout)</span></span>
+                <span class="ar">2. <span>الصف (Row) - التخطيط الأفقي</span></span>
+            </h2>
+            <div class="content-area">
+                <div class="two-column">
+                    <div class="concept-block">
+                        <h3><i class="fa-solid fa-arrows-left-right"></i> <span class="en">What, Why, and
+                                How?</span><span class="ar">ماذا، لماذا، وكيف؟</span></h3>
+                        <p>
+                            <span class="en"><strong>What:</strong> A widget that displays its children in a horizontal
+                                array (side-by-side).</span>
+                            <span class="ar"><strong>ماذا:</strong> عنصر يعرض أبناءه في ترتيب أفقي (جنباً إلى
+                                جنب).</span>
+                        </p>
+                        <p>
+                            <span class="en"><strong>Why:</strong> To build horizontal layouts like navbars, icon/text
+                                pairs, or horizontal lists.</span>
+                            <span class="ar"><strong>لماذا:</strong> لبناء تخطيطات أفقية مثل أشرطة التنقل، أو أيقونة
+                                بجوار نص.</span>
+                        </p>
+                        <p>
+                            <span class="en"><strong>How:</strong> Use <code>Row(children: [...])</code>. Control
+                                spacing using <code>mainAxisAlignment</code> (horizontal) and
+                                <code>crossAxisAlignment</code> (vertical).</span>
+                            <span class="ar"><strong>كيف:</strong> استخدم <code>Row(children: [...])</code>. تحكم في
+                                المسافات باستخدام <code>mainAxisAlignment</code> (أفقياً) و
+                                <code>crossAxisAlignment</code> (رأسياً).</span>
+                        </p>
+                    </div>
+                    <div>
+                        <div class="code-block" style="font-size: 16px;">
+                            <span class="ty">Row</span>(
+                            <span class="cm">// Align items horizontally (Main Axis)</span>
+                            <span class="fn">mainAxisAlignment</span>: <span
+                                class="enm">MainAxisAlignment</span>.spaceBetween,
+                            <span class="cm">// Align items vertically (Cross Axis)</span>
+                            <span class="fn">crossAxisAlignment</span>: <span
+                                class="enm">CrossAxisAlignment</span>.center,
+                            <span class="fn">children</span>: [
+                            <span class="ty">Icon</span>(<span class="enm">Icons</span>.home),
+                            <span class="ty">Text</span>(<span class="st">'Home Page'</span>),
+                            <span class="ty">Icon</span>(<span class="enm">Icons</span>.arrow_forward),
+                            ],
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">05</div>
+        </div>
+
+        <!-- Slide 6: Concept 3: Column -->
+        <div class="slide-container" id="slide6">
+            <h2 class="slide-title">
+                <span class="en">3. <span>Column (Vertical Layout)</span></span>
+                <span class="ar">3. <span>العمود (Column) - التخطيط الرأسي</span></span>
+            </h2>
+            <div class="content-area">
+                <div class="two-column">
+                    <div class="concept-block">
+                        <h3><i class="fa-solid fa-arrows-up-down"></i> <span class="en">What, Why, and How?</span><span
+                                class="ar">ماذا، لماذا، وكيف؟</span></h3>
+                        <p>
+                            <span class="en"><strong>What:</strong> A widget that displays its children in a vertical
+                                array (top-to-bottom).</span>
+                            <span class="ar"><strong>ماذا:</strong> عنصر يعرض أبناءه في ترتيب رأسي (من الأعلى
+                                للأسفل).</span>
+                        </p>
+                        <p>
+                            <span class="en"><strong>Why:</strong> Almost every mobile app screen flows vertically! Use
+                                it to stack UI sections.</span>
+                            <span class="ar"><strong>لماذا:</strong> تقريباً كل شاشات التطبيقات تتدفق رأسياً! استخدمه
+                                لترتيب أقسام الواجهة فوق بعضها.</span>
+                        </p>
+                        <p>
+                            <span class="en"><strong>How:</strong> Use <code>Column(children: [...])</code>. Now,
+                                <code>mainAxisAlignment</code> is vertical, and <code>crossAxisAlignment</code> is
+                                horizontal!</span>
+                            <span class="ar"><strong>كيف:</strong> استخدم <code>Column(children: [...])</code>. هنا،
+                                <code>mainAxisAlignment</code> أصبح رأسياً، و <code>crossAxisAlignment</code> أصبح
+                                أفقياً!</span>
+                        </p>
+                    </div>
+                    <div>
+                        <div class="code-block" style="font-size: 16px;">
+                            <span class="ty">Column</span>(
+                            <span class="cm">// Align items vertically (Main Axis)</span>
+                            <span class="fn">mainAxisAlignment</span>: <span class="enm">MainAxisAlignment</span>.start,
+                            <span class="cm">// Align items horizontally (Cross Axis)</span>
+                            <span class="fn">crossAxisAlignment</span>: <span
+                                class="enm">CrossAxisAlignment</span>.stretch,
+                            <span class="fn">children</span>: [
+                            <span class="ty">Image</span>.network(<span class="st">'url.jpg'</span>),
+                            <span class="ty">SizedBox</span>(<span class="fn">height</span>: <span
+                                class="nm">20</span>), <span class="cm">// Spacing</span>
+                            <span class="ty">Text</span>(<span class="st">'Article Title'</span>),
+                            <span class="ty">Text</span>(<span class="st">'Article Body...'</span>),
+                            ],
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">06</div>
+        </div>
+
+        <!-- Slide 7: Concept 4: Stack -->
+        <div class="slide-container" id="slide7">
+            <h2 class="slide-title">
+                <span class="en">4. <span>Stack (Z-Axis Overlapping)</span></span>
+                <span class="ar">4. <span>المكدس (Stack) - التراكب</span></span>
+            </h2>
+            <div class="content-area">
+                <div class="two-column">
+                    <div class="concept-block">
+                        <h3><i class="fa-solid fa-layer-group"></i> <span class="en">What, Why, and How?</span><span
+                                class="ar">ماذا، لماذا، وكيف؟</span></h3>
+                        <p>
+                            <span class="en"><strong>What:</strong> A widget that positions its children relative to the
+                                edges of its box. Children overlap each other.</span>
+                            <span class="ar"><strong>ماذا:</strong> عنصر يضع أبناءه بناءً على حواف الصندوق الخاص به.
+                                الأبناء يتراكبون فوق بعضهم (Z-Axis).</span>
+                        </p>
+                        <p>
+                            <span class="en"><strong>Why:</strong> Perfect for notification badges, profile pictures
+                                with edit icons, or text overlaid on an image.</span>
+                            <span class="ar"><strong>لماذا:</strong> مثالي لشعارات الإشعارات، صور الملف الشخصي مع أيقونة
+                                التعديل، أو كتابة نص فوق صورة.</span>
+                        </p>
+                        <p>
+                            <span class="en"><strong>How:</strong> Use <code>Stack(children: [...])</code>. The first
+                                child is at the bottom. Use the <code>Positioned</code> widget to place children exactly
+                                where you want them.</span>
+                            <span class="ar"><strong>كيف:</strong> استخدم <code>Stack(children: [...])</code>. الابن
+                                الأول يكون في الأسفل. استخدم <code>Positioned</code> لوضع الأبناء في أماكن دقيقة.</span>
+                        </p>
+                    </div>
+                    <div>
+                        <div class="code-block" style="font-size: 16px;">
+                            <span class="ty">Stack</span>(
+                            <span class="fn">alignment</span>: <span class="enm">Alignment</span>.center,
+                            <span class="fn">children</span>: [
+                            <span class="cm">// Bottom layer</span>
+                            <span class="ty">Container</span>(
+                            <span class="fn">width</span>: <span class="nm">100</span>, <span class="fn">height</span>:
+                            <span class="nm">100</span>,
+                            <span class="fn">color</span>: <span class="enm">Colors</span>.blue,
+                            ),
+                            <span class="cm">// Top layer overlapping</span>
+                            <span class="ty">Positioned</span>(
+                            <span class="fn">top</span>: <span class="nm">0</span>,
+                            <span class="fn">right</span>: <span class="nm">0</span>,
+                            <span class="fn">child</span>: <span class="ty">Icon</span>(<span
+                                class="enm">Icons</span>.check_circle, <span class="fn">color</span>: <span
+                                class="enm">Colors</span>.green),
+                            ),
+                            ],
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">07</div>
+        </div>
+
+        <!-- Slide 8: Spot the Bug 1 (Container) -->
+        <div class="slide-container" id="slide8">
+            <h2 class="slide-title">
+                <span class="en">Spot the UI Bug 1: <span>Container Errors</span></span>
+                <span class="ar">اكتشف خطأ الواجهة 1: <span>أخطاء الـ Container</span></span>
+            </h2>
+            <div class="content-area">
+                <div class="two-column">
+                    <div>
+                        <p class="en">This Flutter code causes a red "Assertion Failed" error screen.
+                            <strong>Why?</strong></p>
+                        <p class="ar">هذا الكود يسبب شاشة خطأ حمراء (Assertion Failed) في فلاتر. <strong>لماذا؟</strong>
+                        </p>
+
+                        <div id="bug1-opts">
+                            <div class="bug-opt" onclick="checkBug(1, this, false)">
+                                <span class="en">1. A <code>Container</code> must always have a
+                                    <code>child</code>.</span>
+                                <span class="ar">1. الحاوية (Container) يجب أن تحتوي دائماً على
+                                    <code>child</code>.</span>
+                            </div>
+                            <div class="bug-opt" onclick="checkBug(1, this, true)">
+                                <span class="en">2. You cannot provide both a <code>color</code> outside and a
+                                    <code>decoration</code> with a color.</span>
+                                <span class="ar">2. لا يمكنك توفير <code>color</code> بالخارج واستخدام
+                                    <code>decoration</code> في نفس الوقت.</span>
+                            </div>
+                            <div class="bug-opt" onclick="checkBug(1, this, false)">
+                                <span class="en">3. <code>BoxDecoration</code> requires a
+                                    <code>borderRadius</code>.</span>
+                                <span class="ar">3. الـ <code>BoxDecoration</code> يتطلب تحديد
+                                    <code>borderRadius</code>.</span>
+                            </div>
+                        </div>
+                        <div id="bug1-res" class="sim-result"></div>
+                    </div>
+                    <div>
+                        <div class="code-block" style="font-size: 16px;">
+                            <span class="ty">Container</span>(
+                            <span class="fn">width</span>: <span class="nm">200</span>,
+                            <span class="fn">height</span>: <span class="nm">200</span>,
+
+                            <span class="cm">// ❌ ERROR CAUSING CODE</span>
+                            <span class="fn">color</span>: <span class="enm">Colors</span>.red,
+                            <span class="fn">decoration</span>: <span class="ty">BoxDecoration</span>(
+                            <span class="fn">color</span>: <span class="enm">Colors</span>.blue,
+                            <span class="fn">borderRadius</span>: <span class="ty">BorderRadius</span>.circular(<span
+                                class="nm">10</span>),
+                            ),
+
+                            <span class="fn">child</span>: <span class="ty">Text</span>(<span class="st">'Hi'</span>),
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">08</div>
+        </div>
+
+        <!-- Slide 9: Spot the Bug 2 (Row Overflow) -->
+        <div class="slide-container" id="slide9">
+            <h2 class="slide-title">
+                <span class="en">Spot the UI Bug 2: <span>Row Overflow</span></span>
+                <span class="ar">اكتشف خطأ الواجهة 2: <span>تجاوز حدود الـ Row</span></span>
+            </h2>
+            <div class="content-area">
+                <div class="two-column">
+                    <div>
+                        <p class="en">When running this code, you see yellow and black stripes warning you about a
+                            "RenderFlex Overflow" on the right side. <strong>How to fix it?</strong></p>
+                        <p class="ar">عند تشغيل الكود، تظهر خطوط صفراء وسوداء تحذرك من "RenderFlex Overflow" على اليمين.
+                            <strong>كيف تصلح ذلك؟</strong></p>
+
+                        <div id="bug2-opts">
+                            <div class="bug-opt" onclick="checkBug(2, this, false)">
+                                <span class="en">1. Give the <code>Row</code> a fixed width.</span>
+                                <span class="ar">1. إعطاء الـ <code>Row</code> عرضاً ثابتاً (width).</span>
+                            </div>
+                            <div class="bug-opt" onclick="checkBug(2, this, true)">
+                                <span class="en">2. Wrap the wide <code>Container</code> (or the Text) inside an
+                                    <code>Expanded</code> or <code>Flexible</code> widget.</span>
+                                <span class="ar">2. تغليف الـ <code>Container</code> العريض بـ <code>Expanded</code> أو
+                                    <code>Flexible</code>.</span>
+                            </div>
+                            <div class="bug-opt" onclick="checkBug(2, this, false)">
+                                <span class="en">3. Change <code>mainAxisAlignment</code> to <code>center</code>.</span>
+                                <span class="ar">3. تغيير <code>mainAxisAlignment</code> إلى <code>center</code>.</span>
+                            </div>
+                        </div>
+                        <div id="bug2-res" class="sim-result"></div>
+                    </div>
+                    <div>
+                        <div class="code-block" style="font-size: 16px;">
+                            <span class="ty">Row</span>(
+                            <span class="fn">children</span>: [
+                            <span class="ty">Icon</span>(<span class="enm">Icons</span>.info),
+
+                            <span class="cm">// ❌ Too wide for a normal mobile screen!</span>
+                            <span class="ty">Container</span>(
+                            <span class="fn">width</span>: <span class="nm">800</span>,
+                            <span class="fn">color</span>: <span class="enm">Colors</span>.grey,
+                            <span class="fn">child</span>: <span class="ty">Text</span>(<span class="st">'A very long
+                                text description...'</span>),
+                            ),
+                            ],
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">09</div>
+        </div>
+
+        <!-- Slide 10: Spot the Bug 3 (Stack) -->
+        <div class="slide-container" id="slide10">
+            <h2 class="slide-title">
+                <span class="en">Spot the UI Bug 3: <span>Stack Placement</span></span>
+                <span class="ar">اكتشف خطأ الواجهة 3: <span>أماكن الـ Stack</span></span>
+            </h2>
+            <div class="content-area">
+                <div class="two-column">
+                    <div>
+                        <div class="code-block" style="font-size: 16px;">
+                            <span class="ty">Column</span>(
+                            <span class="fn">children</span>: [
+                            <span class="ty">Text</span>(<span class="st">'Profile Image:'</span>),
+
+                            <span class="cm">// ❌ ERROR: Misplaced Widget</span>
+                            <span class="ty">Positioned</span>(
+                            <span class="fn">top</span>: <span class="nm">10</span>,
+                            <span class="fn">right</span>: <span class="nm">10</span>,
+                            <span class="fn">child</span>: <span class="ty">Icon</span>(<span
+                                class="enm">Icons</span>.edit),
+                            ),
+
+                            <span class="ty">Image</span>.asset(<span class="st">'avatar.png'</span>),
+                            ],
+                            )
+                        </div>
+                    </div>
+                    <div>
+                        <p class="en">This layout throws an error regarding incorrect widget usage.
+                            <strong>Why?</strong></p>
+                        <p class="ar">هذا التخطيط يعطي خطأ بسبب الاستخدام غير الصحيح للعنصر. <strong>لماذا؟</strong></p>
+
+                        <div id="bug3-opts">
+                            <div class="bug-opt" onclick="checkBug(3, this, true)">
+                                <span class="en">1. <code>Positioned</code> must be a direct child of a
+                                    <code>Stack</code>, not a <code>Column</code>.</span>
+                                <span class="ar">1. <code>Positioned</code> يجب أن يكون ابناً مباشراً لـ
+                                    <code>Stack</code>، وليس <code>Column</code>.</span>
+                            </div>
+                            <div class="bug-opt" onclick="checkBug(3, this, false)">
+                                <span class="en">2. The <code>Image.asset</code> is missing dimensions.</span>
+                                <span class="ar">2. الصورة <code>Image.asset</code> تفتقر إلى الأبعاد
+                                    (Dimensions).</span>
+                            </div>
+                            <div class="bug-opt" onclick="checkBug(3, this, false)">
+                                <span class="en">3. <code>Column</code> needs
+                                    <code>crossAxisAlignment: CrossAxisAlignment.stretch</code>.</span>
+                                <span class="ar">3. <code>Column</code> يحتاج إلى
+                                    <code>crossAxisAlignment: stretch</code>.</span>
+                            </div>
+                        </div>
+                        <div id="bug3-res" class="sim-result"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">10</div>
+        </div>
+
+        <!-- Slide 11: Spot the Bug 4 (Expanded Constraints) -->
+        <div class="slide-container" id="slide11">
+            <h2 class="slide-title">
+                <span class="en">Spot the UI Bug 4: <span>Expanded Usage</span></span>
+                <span class="ar">اكتشف خطأ الواجهة 4: <span>استخدام Expanded</span></span>
+            </h2>
+            <div class="content-area">
+                <div class="two-column">
+                    <div>
+                        <div class="code-block" style="font-size: 16px;">
+                            <span class="ty">Container</span>(
+                            <span class="fn">color</span>: <span class="enm">Colors</span>.grey,
+                            <span class="fn">padding</span>: <span class="kw">const</span> <span
+                                class="ty">EdgeInsets</span>.all(<span class="nm">20</span>),
+
+                            <span class="cm">// ❌ ERROR: Incorrect ancestor for Expanded</span>
+                            <span class="fn">child</span>: <span class="ty">Expanded</span>(
+                            <span class="fn">child</span>: <span class="ty">Text</span>(<span class="st">'I want to fill
+                                space!'</span>),
+                            ),
+                            )
+                        </div>
+                    </div>
+                    <div>
+                        <p class="en">This code throws a Flutter error about parent constraints. <strong>Why?</strong>
+                        </p>
+                        <p class="ar">هذا الكود يعطي خطأ في فلاتر يخص قيود الأب (Constraints). <strong>لماذا؟</strong>
+                        </p>
+
+                        <div id="bug4-opts">
+                            <div class="bug-opt" onclick="checkBug(4, this, false)">
+                                <span class="en">1. <code>Expanded</code> needs a <code>flex</code> factor to
+                                    work.</span>
+                                <span class="ar">1. <code>Expanded</code> يحتاج إلى قيمة <code>flex</code> ليعمل.</span>
+                            </div>
+                            <div class="bug-opt" onclick="checkBug(4, this, false)">
+                                <span class="en">2. <code>Container</code> cannot have both color and padding.</span>
+                                <span class="ar">2. <code>Container</code> لا يمكن أن يحتوي على لون وحواف داخلية
+                                    معاً.</span>
+                            </div>
+                            <div class="bug-opt" onclick="checkBug(4, this, true)">
+                                <span class="en">3. <code>Expanded</code> must be a descendant of a <code>Row</code>,
+                                    <code>Column</code>, or <code>Flex</code>.</span>
+                                <span class="ar">3. <code>Expanded</code> يجب أن يكون بداخل <code>Row</code> أو
+                                    <code>Column</code> أو <code>Flex</code>.</span>
+                            </div>
+                        </div>
+                        <div id="bug4-res" class="sim-result"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">11</div>
+        </div>
+
+        <!-- Slide 12: Lab 1 (Profile Card) -->
+        <div class="slide-container" id="slide12">
+            <h2 class="slide-title">
+                <span class="en">Lab 1: <span>The Profile Row</span></span>
+                <span class="ar">تدريب 1: <span>صف الملف الشخصي</span></span>
+            </h2>
+            <div class="content-area">
+                <div
+                    style="background: var(--bg-tile); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px;">
+                    <p class="en"><strong>Task:</strong> Combine Row, Column, and Container.</p>
+                    <p class="ar"><strong>المهمة:</strong> ادمج بين Row, Column, و Container.</p>
+                    <ul class="en" style="margin-top: 10px;">
+                        <li>Create a <code>Row</code>.</li>
+                        <li>First child: A circular <code>Container</code> (simulate an avatar).</li>
+                        <li>Second child: A <code>SizedBox</code> for width spacing.</li>
+                        <li>Third child: A <code>Column</code> with <code>crossAxisAlignment.start</code> containing two
+                            Texts (Name and Title).</li>
+                    </ul>
+                    <ul class="ar" style="margin-top: 10px;">
+                        <li>أنشئ <code>Row</code>.</li>
+                        <li>الابن الأول: <code>Container</code> دائري (لمحاكاة صورة شخصية).</li>
+                        <li>الابن الثاني: <code>SizedBox</code> لعمل مسافة أفقية.</li>
+                        <li>الابن الثالث: <code>Column</code> (بداخله نَصّان للاسم والمسمى الوظيفي) بمحاذاة
+                            <code>start</code>.</li>
+                    </ul>
+
+                    <button class="sim-btn" onclick="toggleSolution('lab1')" style="margin-top: 15px;">
+                        <i class="fa-solid fa-eye"></i> <span class="en">Toggle Solution</span><span
+                            class="ar">إظهار/إخفاء الحل</span>
+                    </button>
+
+                    <div class="lab-solution" id="sol-lab1">
+                        <div class="code-block" style="font-size: 15px; margin-bottom: 0;">
+                            <span class="ty">Row</span>(
+                            <span class="fn">children</span>: [
+                            <span class="ty">Container</span>(
+                            <span class="fn">width</span>: <span class="nm">50</span>, <span class="fn">height</span>:
+                            <span class="nm">50</span>,
+                            <span class="fn">decoration</span>: <span class="ty">BoxDecoration</span>(<span
+                                class="fn">shape</span>: <span class="enm">BoxShape</span>.circle, <span
+                                class="fn">color</span>: <span class="enm">Colors</span>.grey),
+                            ),
+                            <span class="kw">const</span> <span class="ty">SizedBox</span>(<span
+                                class="fn">width</span>: <span class="nm">16</span>),
+                            <span class="ty">Column</span>(
+                            <span class="fn">crossAxisAlignment</span>: <span
+                                class="enm">CrossAxisAlignment</span>.start,
+                            <span class="fn">children</span>: [
+                            <span class="ty">Text</span>(<span class="st">'Abdallh Mostafa'</span>, <span
+                                class="fn">style</span>: <span class="ty">TextStyle</span>(<span
+                                class="fn">fontWeight</span>: <span class="enm">FontWeight</span>.bold)),
+                            <span class="ty">Text</span>(<span class="st">'Flutter Developer'</span>),
+                            ],
+                            ),
+                            ],
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">12</div>
+        </div>
+
+        <!-- Slide 13: Lab 2 (Notification Badge) -->
+        <div class="slide-container" id="slide13">
+            <h2 class="slide-title">
+                <span class="en">Lab 2: <span>Notification Badge</span></span>
+                <span class="ar">تدريب 2: <span>شارة الإشعارات</span></span>
+            </h2>
+            <div class="content-area">
+                <div
+                    style="background: var(--bg-tile); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px;">
+                    <p class="en"><strong>Task:</strong> Use Stack and Positioned.</p>
+                    <p class="ar"><strong>المهمة:</strong> استخدم Stack و Positioned.</p>
+                    <ul class="en" style="margin-top: 10px;">
+                        <li>Create a <code>Stack</code>.</li>
+                        <li>Add an <code>Icon(Icons.shopping_cart, size: 50)</code> at the bottom of the stack.</li>
+                        <li>Add a <code>Positioned</code> widget targeting the <code>top: 0</code> and
+                            <code>right: 0</code>.</li>
+                        <li>Inside Positioned, place a tiny red circular <code>Container</code> with a white text "3"
+                            inside.</li>
+                    </ul>
+                    <ul class="ar" style="margin-top: 10px;">
+                        <li>أنشئ <code>Stack</code>.</li>
+                        <li>أضف أيقونة سلة التسوق <code>Icon(size: 50)</code> أسفل المكدس.</li>
+                        <li>أضف <code>Positioned</code> يستهدف الزاوية اليمنى العليا (<code>top: 0</code>,
+                            <code>right: 0</code>).</li>
+                        <li>بداخلها، ضع <code>Container</code> أحمر دائري صغير يحوي نص "3" باللون الأبيض.</li>
+                    </ul>
+
+                    <button class="sim-btn" onclick="toggleSolution('lab2')" style="margin-top: 15px;">
+                        <i class="fa-solid fa-eye"></i> <span class="en">Toggle Solution</span><span
+                            class="ar">إظهار/إخفاء الحل</span>
+                    </button>
+
+                    <div class="lab-solution" id="sol-lab2">
+                        <div class="code-block" style="font-size: 15px; margin-bottom: 0;">
+                            <span class="ty">Stack</span>(
+                            <span class="fn">children</span>: [
+                            <span class="ty">Icon</span>(<span class="enm">Icons</span>.shopping_cart, <span
+                                class="fn">size</span>: <span class="nm">50</span>),
+                            <span class="ty">Positioned</span>(
+                            <span class="fn">right</span>: <span class="nm">0</span>,
+                            <span class="fn">top</span>: <span class="nm">0</span>,
+                            <span class="fn">child</span>: <span class="ty">Container</span>(
+                            <span class="fn">padding</span>: <span class="ty">EdgeInsets</span>.all(<span
+                                class="nm">4</span>),
+                            <span class="fn">decoration</span>: <span class="ty">BoxDecoration</span>(
+                            <span class="fn">color</span>: <span class="enm">Colors</span>.red,
+                            <span class="fn">shape</span>: <span class="enm">BoxShape</span>.circle,
+                            ),
+                            <span class="fn">child</span>: <span class="ty">Text</span>(<span class="st">'3'</span>,
+                            <span class="fn">style</span>: <span class="ty">TextStyle</span>(<span
+                                class="fn">color</span>: <span class="enm">Colors</span>.white, <span
+                                class="fn">fontSize</span>: <span class="nm">12</span>)),
+                            ),
+                            ),
+                            ],
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">13</div>
+        </div>
+
+        <!-- Slide 14: Lab 3 (Responsive AppBar) -->
+        <div class="slide-container" id="slide14">
+            <h2 class="slide-title">
+                <span class="en">Lab 3: <span>Custom AppBar</span></span>
+                <span class="ar">تدريب 3: <span>شريط علوي مخصص</span></span>
+            </h2>
+            <div class="content-area">
+                <div
+                    style="background: var(--bg-tile); border: 2px solid var(--border-color); border-radius: 12px; padding: 25px;">
+                    <p class="en"><strong>Task:</strong> Build a responsive top bar.</p>
+                    <p class="ar"><strong>المهمة:</strong> بناء شريط علوي متجاوب.</p>
+                    <ul class="en" style="margin-top: 10px;">
+                        <li>Create a <code>Container</code> with height 60, padding, and a background color.</li>
+                        <li>Set its child to a <code>Row</code>.</li>
+                        <li>Set the Row's <code>mainAxisAlignment</code> to spread items to the edges (`spaceBetween`).
+                        </li>
+                        <li>Add a menu <code>Icon</code>, a Title <code>Text</code>, and a search <code>Icon</code>.
+                        </li>
+                    </ul>
+                    <ul class="ar" style="margin-top: 10px;">
+                        <li>أنشئ <code>Container</code> بارتفاع 60، مع حواف داخلية ولون خلفية.</li>
+                        <li>اجعل ابنه <code>Row</code>.</li>
+                        <li>اضبط محاذاة الصف <code>mainAxisAlignment</code> لدفع العناصر للأطراف (`spaceBetween`).</li>
+                        <li>أضف أيقونة قائمة، نص للعنوان، وأيقونة بحث.</li>
+                    </ul>
+
+                    <button class="sim-btn" onclick="toggleSolution('lab3')" style="margin-top: 15px;">
+                        <i class="fa-solid fa-eye"></i> <span class="en">Toggle Solution</span><span
+                            class="ar">إظهار/إخفاء الحل</span>
+                    </button>
+
+                    <div class="lab-solution" id="sol-lab3">
+                        <div class="code-block" style="font-size: 15px; margin-bottom: 0;">
+                            <span class="ty">Container</span>(
+                            <span class="fn">height</span>: <span class="nm">60</span>,
+                            <span class="fn">color</span>: <span class="enm">Colors</span>.blueAccent,
+                            <span class="fn">padding</span>: <span class="kw">const</span> <span
+                                class="ty">EdgeInsets</span>.symmetric(<span class="fn">horizontal</span>: <span
+                                class="nm">16</span>),
+                            <span class="fn">child</span>: <span class="ty">Row</span>(
+                            <span class="fn">mainAxisAlignment</span>: <span
+                                class="enm">MainAxisAlignment</span>.spaceBetween,
+                            <span class="fn">children</span>: [
+                            <span class="ty">Icon</span>(<span class="enm">Icons</span>.menu, <span
+                                class="fn">color</span>: <span class="enm">Colors</span>.white),
+                            <span class="ty">Text</span>(<span class="st">'My App'</span>, <span
+                                class="fn">style</span>: <span class="ty">TextStyle</span>(<span
+                                class="fn">color</span>: <span class="enm">Colors</span>.white, <span
+                                class="fn">fontSize</span>: <span class="nm">20</span>)),
+                            <span class="ty">Icon</span>(<span class="enm">Icons</span>.search, <span
+                                class="fn">color</span>: <span class="enm">Colors</span>.white),
+                            ],
+                            ),
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">14</div>
+        </div>
+
+        <!-- Slide 15: 15-Question Quiz Engine -->
+        <div class="slide-container" id="slide15" style="padding: 30px 50px;">
+            <div class="quiz-engine" id="quiz-engine-ui">
+                <div class="quiz-header">
+                    <div><i class="fa-solid fa-brain"></i> <span class="en">Layouts Mega-Quiz (15 Qs)</span><span
+                            class="ar">الاختبار الشامل للواجهات</span></div>
+                    <div id="quiz-counter">1 / 15</div>
+                </div>
+                <div class="quiz-progress-bar">
+                    <div class="quiz-progress-fill" id="quiz-progress"></div>
+                </div>
+
+                <div class="quiz-question-container">
+                    <div class="q-text" id="q-text">Loading question...</div>
+                    <div class="q-options" id="q-options">
+                        <!-- Options injected via JS -->
+                    </div>
+
+                    <div class="quiz-footer">
+                        <div class="q-feedback" id="q-feedback"></div>
+                        <button class="sim-btn" id="btn-next-q" style="display: none;">
+                            <span class="en">Next Question</span><span class="ar">السؤال التالي</span> <i
+                                class="fa-solid fa-arrow-right" style="margin-left: 10px;"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Results UI -->
+            <div class="quiz-results" id="quiz-results-ui">
+                <h2 style="font-size: 50px; margin-bottom: 20px;"><span class="en">Masterclass Complete!</span><span
+                        class="ar">اكتملت الدورة!</span></h2>
+                <div class="score-circle" id="quiz-score-final">0/15</div>
+                <p style="font-size: 24px; color: var(--sky-blue-light);" id="quiz-msg"></p>
+                <button class="sim-btn" onclick="resetQuiz()" style="margin-top: 30px; font-size: 20px;">
+                    <i class="fa-solid fa-rotate-right"></i> <span class="en">Retake Quiz</span><span class="ar">إعادة
+                        الاختبار</span>
+                </button>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">15</div>
+        </div>
+
+        <!-- Slide 16: Golden Rules -->
+        <div class="slide-container" id="slide16">
+            <h2 class="slide-title" style="text-align: center; border: none;">
+                <span class="en">The <span>Golden Rules</span> of Flutter Layouts</span>
+                <span class="ar">القواعد <span>الذهبية</span> لتصميم واجهات فلاتر</span>
+            </h2>
+            <div class="content-area" style="align-items: center;">
+                <ul class="agenda-list">
+                    <li class="agenda-item" style="gap: 20px;">
+                        <i class="fa-solid fa-box" style="color: var(--amber-flame); font-size: 30px;"></i>
+                        <div>
+                            <span class="en"><strong>Container:</strong> Use it for margins, padding, styling, and
+                                sizing a <em>single</em> widget.</span>
+                            <span class="ar"><strong>Container:</strong> استخدمه للهوامش، الزخرفة، وتحديد حجم عنصر
+                                <em>واحد</em>.</span>
+                        </div>
+                    </li>
+                    <li class="agenda-item" style="gap: 20px;">
+                        <i class="fa-solid fa-arrows-left-right"
+                            style="color: var(--sky-blue-light); font-size: 30px;"></i>
+                        <div>
+                            <span class="en"><strong>Row/Column:</strong> Use for <em>linear</em> direction. Remember
+                                Main and Cross axes swap!</span>
+                            <span class="ar"><strong>Row/Column:</strong> استخدمهما للترتيب <em>الخطي</em>. تذكر أن
+                                المحاور الرئيسية والفرعية تتبدل!</span>
+                        </div>
+                    </li>
+                    <li class="agenda-item" style="gap: 20px;">
+                        <i class="fa-solid fa-expand" style="color: var(--success); font-size: 30px;"></i>
+                        <div>
+                            <span class="en"><strong>Expanded:</strong> Essential inside Row/Column to prevent Overflow
+                                errors and fill space.</span>
+                            <span class="ar"><strong>Expanded:</strong> ضروري داخل الـ Row/Column لمنع أخطاء تجاوز
+                                الحدود (Overflow).</span>
+                        </div>
+                    </li>
+                    <li class="agenda-item" style="gap: 20px;">
+                        <i class="fa-solid fa-layer-group" style="color: var(--princeton-orange); font-size: 30px;"></i>
+                        <div>
+                            <span class="en"><strong>Stack:</strong> Use when widgets need to overlap on the Z-Axis.
+                                Pair with <code>Positioned</code>.</span>
+                            <span class="ar"><strong>Stack:</strong> استخدمه عندما تحتاج لتراكب العناصر فوق بعضها. ادمجه
+                                مع <code>Positioned</code>.</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="slide-number">16</div>
+        </div>
+
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="controls-overlay">
+        <button class="nav-btn" id="btn-prev" title="Previous Slide"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="nav-btn" id="btn-next" title="Next Slide"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+
+    <script>
+        // --- 1. PRESENTATION LOGIC ---
+        const slides = document.querySelectorAll('.slide-container');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                const progressBar = slide.querySelector('.progress-bar');
+                if (progressBar) progressBar.style.width = `${((index + 1) / totalSlides) * 100}%`;
+                const slideNumberEl = slide.querySelector('.slide-number');
+                if (slideNumberEl) slideNumberEl.textContent = String(index + 1).padStart(2, '0');
+            });
+            slides[currentSlide].classList.add('active');
+        }
+
+        function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateSlides(); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlides(); } }
+
+        document.getElementById('btn-next').addEventListener('click', nextSlide);
+        document.getElementById('btn-prev').addEventListener('click', prevSlide);
+
+        document.addEventListener('keydown', (e) => {
+            const isRtl = document.body.getAttribute('lang') === 'ar';
+            if (e.key === 'ArrowRight') { isRtl ? prevSlide() : nextSlide(); }
+            if (e.key === 'ArrowLeft') { isRtl ? nextSlide() : prevSlide(); }
+        });
+
+        updateSlides();
+
+        // --- 2. THEME & LANGUAGE LOGIC ---
+        const themeBtn = document.getElementById('theme-btn');
+        const langBtn = document.getElementById('lang-btn');
+        const langText = document.getElementById('lang-text');
+        const body = document.body;
+
+        themeBtn.addEventListener('click', () => {
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                body.setAttribute('data-theme', 'light');
+                themeBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            }
+        });
+
+        langBtn.addEventListener('click', () => {
+            const isEn = body.getAttribute('lang') === 'en';
+            body.setAttribute('lang', isEn ? 'ar' : 'en');
+            langText.textContent = isEn ? 'EN' : 'عربي';
+            renderQuestion(); // Update quiz language
+
+            // Reset Bugs
+            [1, 2, 3, 4].forEach(id => {
+                document.querySelectorAll(`#bug${id}-opts .bug-opt`).forEach(opt => {
+                    opt.classList.remove('correct', 'wrong');
+                });
+                const resEl = document.getElementById(`bug${id}-res`);
+                if (resEl) resEl.className = 'sim-result';
+            });
+        });
+
+        // --- 3. COPY & AI EXPLAIN LOGIC ---
+        document.querySelectorAll('.code-block').forEach((codeBlock) => {
+            if (codeBlock.closest('.sim-panel') || codeBlock.closest('#slide8') || codeBlock.closest('#slide9') || codeBlock.closest('#slide10') || codeBlock.closest('#slide11')) return; // ignore bug slides
+
+            const actionsWrapper = document.createElement('div');
+            actionsWrapper.className = 'code-actions';
+
+            const explainBtn = document.createElement('button');
+            explainBtn.className = 'action-btn explain-btn';
+            explainBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> <span class="en">Explain</span><span class="ar">شرح</span>';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'action-btn copy-btn';
+            copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+
+            actionsWrapper.appendChild(explainBtn);
+            actionsWrapper.appendChild(copyBtn);
+            codeBlock.insertBefore(actionsWrapper, codeBlock.firstChild);
+
+            copyBtn.addEventListener('click', () => {
+                const clonedBlock = codeBlock.cloneNode(true);
+                clonedBlock.querySelector('.code-actions')?.remove();
+                const textArea = document.createElement("textarea");
+                textArea.value = clonedBlock.textContent.trim();
+                document.body.appendChild(textArea);
+                textArea.select();
+                try { document.execCommand('copy'); copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>'; setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>', 2000); } catch (e) { }
+                textArea.remove();
+            });
+
+            const explanationDiv = document.createElement('div');
+            explanationDiv.className = 'ai-explanation';
+            codeBlock.parentNode.insertBefore(explanationDiv, codeBlock.nextSibling);
+
+            explainBtn.addEventListener('click', async () => {
+                if (explanationDiv.classList.contains('active')) return explanationDiv.classList.remove('active');
+                const clonedBlock = codeBlock.cloneNode(true);
+                clonedBlock.querySelector('.code-actions')?.remove();
+                const isAr = document.body.getAttribute('lang') === 'ar';
+
+                explanationDiv.innerHTML = isAr ? '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري تحليل الكود...' : '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyzing...';
+                explanationDiv.classList.add('active');
+
+                try {
+                    const prompt = `Explain this Flutter Layout UI code in < 3 sentences for a beginner:\n\n${clonedBlock.textContent.trim()}`;
+                    const sys = isAr ? "اشرح كود فلاتر باختصار بالعربية للمبتدئين." : "Explain concisely in English for a beginner.";
+                    const exp = await callGemini(prompt, sys);
+                    explanationDiv.innerHTML = `<strong>✨ AI:</strong><br>${exp.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}`;
+                } catch (e) {
+                    explanationDiv.innerHTML = `<span style="color:var(--error);">Failed to load explanation.</span>`;
+                }
+            });
+        });
+
+        // --- 4. SPOT THE BUG LOGIC ---
+        function checkBug(bugId, optElement, isCorrect) {
+            // Reset others in group
+            const group = document.getElementById(`bug${bugId}-opts`);
+            group.querySelectorAll('.bug-opt').forEach(el => el.classList.remove('correct', 'wrong'));
+
+            const res = document.getElementById(`bug${bugId}-res`);
+            const isAr = document.body.getAttribute('lang') === 'ar';
+
+            if (isCorrect) {
+                optElement.classList.add('correct');
+                res.className = 'sim-result show sim-success';
+                res.innerHTML = isAr ? '<i class="fa-solid fa-check-circle"></i> ممتاز! تحليل صحيح.' : '<i class="fa-solid fa-check-circle"></i> Excellent! Correct analysis.';
+            } else {
+                optElement.classList.add('wrong');
+                res.className = 'sim-result show sim-error';
+                res.innerHTML = isAr ? '<i class="fa-solid fa-circle-xmark"></i> خطأ! فكر مرة أخرى.' : '<i class="fa-solid fa-circle-xmark"></i> Incorrect! Think again.';
+            }
+        }
+
+        // --- 5. LAB SOLUTIONS TOGGLE ---
+        function toggleSolution(labId) {
+            const sol = document.getElementById(`sol-${labId}`);
+            sol.classList.toggle('show');
+        }
+
+        // --- 6. 15-QUESTION QUIZ ENGINE (FLUTTER SPECIFIC) ---
+        const quizData = [
+            {
+                en: { q: "What is the primary purpose of a Container in Flutter?", opts: ["To align elements horizontally", "To overlap widgets on the Z-axis", "To add styling, padding, margins, and sizing to a single widget", "To handle user input like taps"] },
+                ar: { q: "ما هو الغرض الرئيسي من الـ Container في فلاتر؟", opts: ["محاذاة العناصر أفقياً", "تراكب العناصر على المحور Z", "إضافة تنسيقات، هوامش، وتحديد حجم لعنصر واحد", "التعامل مع إدخال المستخدم كالنقر"] },
+                ans: 2
+            },
+            {
+                en: { q: "Which widget is best for arranging multiple children horizontally?", opts: ["Column", "Row", "Stack", "Container"] },
+                ar: { q: "ما هو العنصر الأفضل لترتيب عدة أبناء بشكل أفقي؟", opts: ["العمود (Column)", "الصف (Row)", "المكدس (Stack)", "الحاوية (Container)"] },
+                ans: 1
+            },
+            {
+                en: { q: "In a Column widget, what direction is the Main Axis?", opts: ["Horizontal", "Vertical", "Z-Axis (Depth)", "Diagonal"] },
+                ar: { q: "في عنصر الـ Column، ما هو اتجاه المحور الرئيسي (Main Axis)؟", opts: ["أفقي", "رأسي", "المحور Z (العمق)", "قطري"] },
+                ans: 1
+            },
+            {
+                en: { q: "How do you align children to the center of a Row?", opts: ["crossAxisAlignment: CrossAxisAlignment.center", "mainAxisAlignment: MainAxisAlignment.center", "alignment: Alignment.center", "position: Positioned.center"] },
+                ar: { q: "كيف تقوم بمحاذاة الأبناء في وسط الـ Row؟", opts: ["crossAxisAlignment: CrossAxisAlignment.center", "mainAxisAlignment: MainAxisAlignment.center", "alignment: Alignment.center", "position: Positioned.center"] },
+                ans: 1
+            },
+            {
+                en: { q: "Which layout widget allows its children to overlap each other?", opts: ["Stack", "Row", "Column", "Expanded"] },
+                ar: { q: "أي عنصر تخطيط (Layout) يسمح لأبنائه بالتراكب فوق بعضهم البعض؟", opts: ["Stack", "Row", "Column", "Expanded"] },
+                ans: 0
+            },
+            {
+                en: { q: "Which widget is specifically designed to position a child inside a Stack?", opts: ["Align", "Expanded", "Positioned", "Flexible"] },
+                ar: { q: "أي عنصر مصمم خصيصاً لتحديد موقع ابن داخل الـ Stack؟", opts: ["Align", "Expanded", "Positioned", "Flexible"] },
+                ans: 2
+            },
+            {
+                en: { q: "What happens if you provide both `color: Colors.red` and `decoration: BoxDecoration(color: Colors.blue)` to a Container?", opts: ["It blends the colors into purple", "The decoration color overrides the outside color", "It causes a runtime assertion error", "The outside color overrides the decoration color"] },
+                ar: { q: "ماذا يحدث إذا مررت `color: Colors.red` وفي نفس الوقت `decoration: BoxDecoration(color: Colors.blue)` للـ Container؟", opts: ["يمزج اللونين ليصبح أرجواني", "لون الـ decoration يلغي اللون الخارجي", "يتسبب في خطأ برمجي (Assertion Error)", "اللون الخارجي يلغي لون الـ decoration"] },
+                ans: 2
+            },
+            {
+                en: { q: "Which widget is used to make a child fill the remaining available space in a Row or Column?", opts: ["Container", "Expanded", "Align", "Stack"] },
+                ar: { q: "أي عنصر يُستخدم لجعل الابن يملأ المساحة المتبقية المتاحة داخل Row أو Column؟", opts: ["Container", "Expanded", "Align", "Stack"] },
+                ans: 1
+            },
+            {
+                en: { q: "What is the default `mainAxisSize` for Row and Column?", opts: ["MainAxisSize.min", "MainAxisSize.max", "MainAxisSize.auto", "MainAxisSize.expand"] },
+                ar: { q: "ما هي القيمة الافتراضية لـ `mainAxisSize` في الـ Row و Column؟", opts: ["MainAxisSize.min", "MainAxisSize.max", "MainAxisSize.auto", "MainAxisSize.expand"] },
+                ans: 1
+            },
+            {
+                en: { q: "How many children does a Container take by default?", opts: ["Unlimited (it takes a List)", "Exactly two", "Only one", "None"] },
+                ar: { q: "كم عدد الأبناء (children) الذين يأخذهم الـ Container كحد أقصى؟", opts: ["عدد غير محدود (يأخذ قائمة)", "اثنان بالضبط", "ابن واحد فقط", "لا شيء"] },
+                ans: 2
+            },
+            {
+                en: { q: "What visual error do you see when children inside a Row are wider than the screen?", point: "overflow", opts: ["A red screen of death", "The app crashes immediately", "Yellow and black striped tape on the edge", "The widgets automatically shrink"] },
+                ar: { q: "ما هو الخطأ المرئي الذي تراه عندما يكون أبناء الـ Row أعرض من الشاشة؟", opts: ["شاشة الخطأ الحمراء", "يتوقف التطبيق فوراً عن العمل", "شريط مخطط أصفر وأسود على الحافة", "تصغر العناصر تلقائياً"] },
+                ans: 2
+            },
+            {
+                en: { q: "How do you align items to the START of the horizontal axis inside a Column?", opts: ["mainAxisAlignment: MainAxisAlignment.start", "crossAxisAlignment: CrossAxisAlignment.start", "alignment: Alignment.centerLeft", "textDirection: TextDirection.ltr"] },
+                ar: { q: "كيف تقوم بمحاذاة العناصر إلى بداية المحور الأفقي داخل Column؟", opts: ["mainAxisAlignment: MainAxisAlignment.start", "crossAxisAlignment: CrossAxisAlignment.start", "alignment: Alignment.centerLeft", "textDirection: TextDirection.ltr"] },
+                ans: 1
+            },
+            {
+                en: { q: "Can a Stack widget have zero children?", opts: ["Yes, but it won't display anything", "No, it requires at least one child", "No, it requires at least two children to 'stack'", "Yes, and it defaults to a white box"] },
+                ar: { q: "هل يمكن للـ Stack أن يحتوي على صفر من الأبناء؟", opts: ["نعم، لكنه لن يعرض أي شيء", "لا، يتطلب ابناً واحداً على الأقل", "لا، يتطلب ابنين على الأقل لعمل 'التراكب'", "نعم، ويظهر كمربع أبيض افتراضياً"] },
+                ans: 0
+            },
+            {
+                en: { q: "Which property adds empty space INSIDE a Container's borders?", opts: ["margin", "padding", "spacing", "alignment"] },
+                ar: { q: "أي خاصية تضيف مساحة فارغة داخل حواف الـ Container؟", opts: ["margin", "padding", "spacing", "alignment"] },
+                ans: 1
+            },
+            {
+                en: { q: "Which property adds empty space OUTSIDE a Container's borders?", opts: ["margin", "padding", "spacing", "alignment"] },
+                ar: { q: "أي خاصية تضيف مساحة فارغة خارج حواف الـ Container؟", opts: ["margin", "padding", "spacing", "alignment"] },
+                ans: 0
+            }
+        ];
+
+        let currentQ = 0;
+        let score = 0;
+        let answered = false;
+
+        function renderQuestion() {
+            const lang = document.body.getAttribute('lang');
+            const data = quizData[currentQ][lang];
+
+            document.getElementById('quiz-counter').textContent = `${currentQ + 1} / 15`;
+            document.getElementById('q-text').textContent = data.q;
+            document.getElementById('quiz-progress').style.width = `${(currentQ / 15) * 100}%`;
+
+            const optsContainer = document.getElementById('q-options');
+            optsContainer.innerHTML = '';
+
+            data.opts.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'q-opt';
+                btn.textContent = optText;
+                btn.onclick = () => handleAnswer(index, btn);
+                optsContainer.appendChild(btn);
+            });
+
+            document.getElementById('q-feedback').className = 'q-feedback';
+            document.getElementById('btn-next-q').style.display = 'none';
+            answered = false;
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            if (answered) return;
+            answered = true;
+
+            const isCorrect = selectedIndex === quizData[currentQ].ans;
+            if (isCorrect) score++;
+
+            const opts = document.querySelectorAll('.q-opt');
+            opts.forEach((opt, idx) => {
+                opt.style.pointerEvents = 'none';
+                if (idx === quizData[currentQ].ans) {
+                    opt.classList.add(isCorrect ? 'selected' : 'correct-reveal');
+                    if (isCorrect) opt.classList.add('correct');
+                } else if (idx === selectedIndex && !isCorrect) {
+                    opt.classList.add('selected', 'wrong');
+                }
+            });
+
+            const fb = document.getElementById('q-feedback');
+            const lang = document.body.getAttribute('lang');
+            fb.className = 'q-feedback show';
+
+            if (isCorrect) {
+                fb.style.color = 'var(--success)';
+                fb.innerHTML = lang === 'ar' ? '<i class="fa-solid fa-check-circle"></i> إجابة صحيحة!' : '<i class="fa-solid fa-check-circle"></i> Correct!';
+            } else {
+                fb.style.color = 'var(--error)';
+                fb.innerHTML = lang === 'ar' ? '<i class="fa-solid fa-circle-xmark"></i> إجابة خاطئة!' : '<i class="fa-solid fa-circle-xmark"></i> Incorrect!';
+            }
+
+            const nextBtn = document.getElementById('btn-next-q');
+            nextBtn.style.display = 'inline-flex';
+            nextBtn.innerHTML = currentQ === 14
+                ? (lang === 'ar' ? 'عرض النتيجة <i class="fa-solid fa-flag-checkered"></i>' : 'View Results <i class="fa-solid fa-flag-checkered"></i>')
+                : (lang === 'ar' ? 'السؤال التالي <i class="fa-solid fa-arrow-right" style="margin-left:10px;"></i>' : 'Next Question <i class="fa-solid fa-arrow-right" style="margin-left:10px;"></i>');
+        }
+
+        document.getElementById('btn-next-q').addEventListener('click', () => {
+            if (currentQ < 14) {
+                currentQ++;
+                renderQuestion();
+            } else {
+                document.getElementById('quiz-engine-ui').style.display = 'none';
+                const resUi = document.getElementById('quiz-results-ui');
+                resUi.style.display = 'flex';
+                document.getElementById('quiz-score-final').textContent = `${score}/15`;
+
+                const msg = document.getElementById('quiz-msg');
+                const isAr = document.body.getAttribute('lang') === 'ar';
+                if (score >= 12) {
+                    msg.textContent = isAr ? "أداء ممتاز! لقد أصبحت محترفاً في واجهات فلاتر." : "Outstanding! You are a Flutter UI Master.";
+                } else if (score >= 8) {
+                    msg.textContent = isAr ? "عمل جيد! تحتاج مراجعة بسيطة لبعض المفاهيم." : "Good job! A quick review of some concepts is needed.";
+                } else {
+                    msg.textContent = isAr ? "يجب إعادة مراجعة الدروس والتمارين المعملية." : "You should review the lessons and lab exercises.";
+                }
+            }
+        });
+
+        function resetQuiz() {
+            currentQ = 0; score = 0;
+            document.getElementById('quiz-results-ui').style.display = 'none';
+            document.getElementById('quiz-engine-ui').style.display = 'flex';
+            renderQuestion();
+        }
+
+        renderQuestion();
+
+        // --- 7. GEMINI API ---
+        const apiKey = "";
+        async function callGemini(prompt, systemInstruction) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: systemInstruction }] } };
+            const maxRetries = 5; const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i <= maxRetries; i++) {
+                try {
+                    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error";
+                } catch (e) {
+                    if (i === maxRetries) throw e;
+                    await new Promise(r => setTimeout(r, delays[i]));
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
